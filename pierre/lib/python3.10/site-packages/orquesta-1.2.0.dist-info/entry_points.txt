@@ -1,0 +1,23 @@
+[orquesta.composers]
+mistral = orquesta.composers.mistral:WorkflowComposer
+mock = orquesta.composers.mock:WorkflowComposer
+native = orquesta.composers.native:WorkflowComposer
+
+[orquesta.expressions.evaluators]
+jinja = orquesta.expressions.jinja:JinjaEvaluator
+yaql = orquesta.expressions.yql:YAQLEvaluator
+
+[orquesta.expressions.functions]
+completed = orquesta.expressions.functions.workflow:completed_
+ctx = orquesta.expressions.functions.common:ctx_
+failed = orquesta.expressions.functions.workflow:failed_
+item = orquesta.expressions.functions.workflow:item_
+json = orquesta.expressions.functions.common:json_
+result = orquesta.expressions.functions.workflow:result_
+succeeded = orquesta.expressions.functions.workflow:succeeded_
+task_status = orquesta.expressions.functions.workflow:task_status_
+zip = orquesta.expressions.functions.common:zip_
+
+[orquesta.tests]
+fake = orquesta.tests.unit.utils.test_plugin:FakePlugin
+
