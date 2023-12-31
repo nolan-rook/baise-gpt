@@ -24,6 +24,11 @@ client = OrquestaClient(options)
 @app.route('/slack/events', methods=['POST'])
 def slack_events():
     data = request.json
+
+    # Slack sends a challenge parameter in the initial verification request
+    if 'challenge' in data:
+        return jsonify({'challenge': data['challenge']})
+
     event = data.get('event', {})
 
     # Handle app_mention events
@@ -34,7 +39,7 @@ def slack_events():
     elif event.get('type') == 'message':
         handle_message(event)
 
-    return jsonify(status=200)
+    return '', 200  # HTTP 200 with empty body
 
 def handle_app_mention(event):
     # Extract the text mentioned to the bot
