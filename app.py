@@ -71,6 +71,9 @@ def handle_app_mention(event):
 
 def handle_message(event):
     # Avoid responding to bot's own in a thread
+    bot_user_id = os.getenv("BOT_ID")
+    if event.get('user') == bot_user_id:
+        return  # Skip processing if the message is from the bot itself
     if event.get('thread_ts'):
         user_message = event['text']
 
