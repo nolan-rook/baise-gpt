@@ -46,13 +46,6 @@ def handle_app_mention(event):
     # Extract the text mentioned to the bot
     prompt_user = event.get('text', '').split('>')[1].strip()
 
-    # Acknowledge the mention in the channel
-    slack_client.chat_postMessage(
-        channel=event['channel'],
-        thread_ts=event['ts'],
-        text=f"Hallo vanaf Baise! :robot_face: \nBedankt voor je request, ik ga gelijk voor je aan de slag!"
-    )
-
     # Create an OrquestaEndpointRequest object
     request = OrquestaEndpointRequest(
         key="slack-app",
@@ -89,7 +82,6 @@ def handle_message(event):
             # Create an OrquestaEndpointRequest object with the user's message
             request = OrquestaEndpointRequest(
                 key="slack-app",
-                metadata={"chain_id": "97db4100789b46bc8ef5bfb5d2869ff8"},
                 variables={"prompt": user_message}
             )
 
