@@ -8,11 +8,6 @@ from orquesta_sdk.prompts import OrquestaPromptMetrics, OrquestaPromptMetricsEco
 from orquesta_sdk.helpers import orquesta_openai_parameters_mapper
 from orquesta_sdk.endpoints import OrquestaEndpointRequest
 
-
-from langchain.schema import AIMessage, HumanMessage, SystemMessage
-from langchain.chat_models import ChatOpenAI
-from langchain.callbacks import get_openai_callback
-
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from slack_sdk import WebClient
 from slack_bolt import App
