@@ -73,8 +73,8 @@ def handle_thread_messages(body, logger):
     if event.get("user") == os.getenv("BOT_ID"):
         return
     
-    # Check if the message is in the thread we're interested in
-    if event.get("thread_ts") == current_thread_info.get("thread_ts"):
+    # Check if current_thread_info is not None and if the message is in the thread we're interested in
+    if current_thread_info and event.get("thread_ts") == current_thread_info.get("thread_ts"):
         
         user_message = event["text"]
 
