@@ -3,7 +3,6 @@ import threading
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 from orquesta_sdk import OrquestaClient, OrquestaClientOptions
-from orquesta_sdk.endpoints import OrquestaEndpointRequest
 from slack_sdk import WebClient
 
 # Load environment variables
@@ -44,7 +43,7 @@ def handle_app_mention(event):
     # Send an immediate response to Slack indicating that the request is being processed
     slack_client.chat_postMessage(
         channel=event['channel'],
-        thread_ts=event['ts'],
+        thread_ts=event['ts'],  # Ensure this is the original message timestamp
         text="Processing your request, please wait..."
     )
 
@@ -64,7 +63,7 @@ def query_orquesta(event, prompt_user):
     # Reply to the thread with the result from Orquesta
     slack_client.chat_postMessage(
         channel=event['channel'],
-        thread_ts=event['ts'],
+        thread_ts=event['ts'],  # Ensure this is the original message timestamp
         text=result.content
     )
 
