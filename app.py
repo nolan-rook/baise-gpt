@@ -37,7 +37,6 @@ authorize_url_generator = AuthorizeUrlGenerator(
     scopes=scopes,
     redirect_uri=redirect_uri
 )
-
 # Route to start the OAuth process
 @app.route('/slack/install', methods=['GET'])
 def pre_install():
@@ -69,8 +68,16 @@ def post_install():
     # Store the bot token and other information in the installation store
     installation_store.save(installation=oauth_response)
 
+    bot_token = oauth_response.get("access_token") or oauth_response.get("authed_user", {}).get("access_token")
+    installation_info = {
+        "team_id": oauth_response.get("team", {}).get("id"),
+        "access_token": bot_token,
+        # Add other relevant data you need to store
+    }
+    installation_store.save(installation=installation_info)
+
     # Save the bot token in the session
-    session["bot_token"] = oauth_response["access_token"]
+    session["bot_token"] = bot_token
 
     return "Auth completed! You can now use the Slack app."
 # Route for handling Slack events
