@@ -30,8 +30,8 @@ client_id = os.getenv("SLACK_CLIENT_ID")
 client_secret = os.getenv("SLACK_CLIENT_SECRET")
 scopes = ["app_mentions:read", "channels:history", "channels:read", "chat:write"]
 redirect_uri = os.getenv("SLACK_REDIRECT_URI")
-state_store = FileOAuthStateStore(expiration_seconds=300, base_dir="./data/states")
-installation_store = FileInstallationStore(base_dir="./data/installations")
+#state_store = FileOAuthStateStore(expiration_seconds=300, base_dir="./data/states")
+#installation_store = FileInstallationStore(base_dir="./data/installations")
 authorize_url_generator = AuthorizeUrlGenerator(
     client_id=client_id,
     scopes=scopes,
