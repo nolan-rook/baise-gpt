@@ -49,7 +49,6 @@ def handle_app_mention(event):
     # Create an OrquestaEndpointRequest object
     request = OrquestaEndpointRequest(
         key="slack-app",
-        metadata={"chain_id": "97db4100789b46bc8ef5bfb5d2869ff8"},
         variables={"prompt": prompt_user}
     )
 
