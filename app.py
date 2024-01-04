@@ -1,7 +1,9 @@
 import os
+import threading
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 from orquesta_sdk import OrquestaClient, OrquestaClientOptions
+from orquesta_sdk.endpoints import OrquestaEndpointRequest
 from slack_sdk import WebClient
 
 # Load environment variables
@@ -39,30 +41,32 @@ def handle_app_mention(event):
     # Extract the text mentioned to the bot
     prompt_user = event.get('text', '').split('>')[1].strip()
 
-    # Create an OrquestaEndpointRequest object
-    request = OrquestaEndpointRequest(
-        key="slack-app",
-        variables={"prompt": prompt_user}
-    )
-
-    # Query the OrquestaClient for a response
-    result = client.endpoints.query(request)
-
-    # Reply to the thread with the result
+    # Send an immediate response to Slack indicating that the request is being processed
     slack_client.chat_postMessage(
         channel=event['channel'],
         thread_ts=event['ts'],
         text="Processing your request, please wait..."
     )
 
-    # Since Orquesta might take a while to respond, consider handling this asynchronously
-    # For now, we'll simulate a delay with a placeholder message
-    # In a real-world scenario, you would use a background task queue like Celery
-    # to handle the long-running operation
+    # Start a new thread to handle the long-running Orquesta API call
+    threading.Thread(target=query_orquesta, args=(event, prompt_user)).start()
 
-    # Placeholder for asynchronous processing
-    # Here you would send the request to Orquesta and wait for the response
-    # Once the response is received from Orquesta, send another message to Slack
+def query_orquesta(event, prompt_user):
+    # Create an OrquestaEndpointRequest object
+    orquesta_request = OrquestaEndpointRequest(
+        key="slack-app",
+        variables={"prompt": prompt_user}
+    )
+
+    # Query the OrquestaClient for a response
+    result = client.endpoints.query(orquesta_request)
+
+    # Reply to the thread with the result from Orquesta
+    slack_client.chat_postMessage(
+        channel=event['channel'],
+        thread_ts=event['ts'],
+        text=result.content
+    )
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
