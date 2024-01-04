@@ -63,6 +63,12 @@ def post_install():
     if not oauth_response.get("ok"):
         return f"Error during OAuth: {oauth_response.get('error')}", 500
 
+    # Extract the bot token from the OAuth response
+    bot_token = oauth_response.get("access_token")
+
+    # Print the bot token to the console (stdout)
+    print(f"Bot token: {bot_token}")
+    
     return "Auth completed! You can now use the Slack app."
 # Route for handling Slack events
 @app.route('/slack/events', methods=['POST'])
