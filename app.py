@@ -40,18 +40,14 @@ authorize_url_generator = AuthorizeUrlGenerator(
 # Route to start the OAuth process
 @app.route('/slack/install', methods=['GET'])
 def pre_install():
-    state = state_store.issue()
-    url = authorize_url_generator.generate(state)
-    print(url)
+    # Directly generate the authorization URL without a state parameter
+    url = authorize_url_generator.generate()
     return redirect(url)
 
 # Route to handle the OAuth callback
 @app.route('/slack/oauth_redirect', methods=['GET'])
 def post_install():
-    state = request.args['state']
     code = request.args['code']
-    if not state_store.consume(state):
-        return "Invalid state parameter", 400
 
     # Initialize a WebClient for the OAuth process
     oauth_client = WebClient()
