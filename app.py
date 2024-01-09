@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 import requests
 import logging
 import io
-import docx
 import fitz
 
 # Configure logging
