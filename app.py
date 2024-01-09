@@ -7,6 +7,9 @@ from slack_sdk import WebClient
 from dotenv import load_dotenv
 import requests
 import logging
+import io
+import docx
+import fitz
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -29,7 +32,6 @@ client = Orquesta(options)
 @app.route('/slack/events', methods=['POST'])
 def slack_events():
     data = request.json
-    logging.info(f"Incoming event: {data}") 
 
     # Slack sends a challenge parameter in the initial verification request
     if 'challenge' in data:
@@ -88,11 +90,40 @@ def download_file(file_url):
         return None
 
 def process_file_content(file_content, event):
-    # Log the start of processing
-    logging.info(f"Processing file content for event: {event}")
-    # ... existing processing code ...
-    # Log the end of processing
-    logging.info(f"Finished processing file content for event: {event}")
+    file_info = event.get('files', [])[0]  # Assuming there's at least one file
+    file_type = file_info.get('filetype')
+
+    text_content = None
+    if file_type == 'pdf':
+        text_content = extract_text_from_pdf(file_content)
+    elif file_type in ['docx', 'msword']:
+        text_content = extract_text_from_docx(file_content)
+
+    if text_content:
+        # This is just a placeholder to illustrate the process
+        logging.info(f"Extracted text content: {text_content[:100]}")  # Log the first 100 characters
+    else:
+        logging.error("Could not extract text from the file.")
+
+def extract_text_from_pdf(file_content):
+    try:
+        with fitz.open(stream=file_content, filetype="pdf") as pdf:
+            text = ""
+            for page in pdf:
+                text += page.get_text()
+            return text
+    except Exception as e:
+        logging.error(f"Error extracting text from PDF: {e}")
+        return None
+
+def extract_text_from_docx(file_content):
+    try:
+        doc = docx.Document(io.BytesIO(file_content))
+        text =n".join(paragraph.text for paragraph in doc.paragraphs)
+        return text
+    except Exception as e:
+        logging.error(f"Error extracting text from DOCX: {e}")
+        return None
 
 def query_orquesta(event, prompt_user):
     # Invoke the Orquesta deployment
