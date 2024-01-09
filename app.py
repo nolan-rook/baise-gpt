@@ -73,7 +73,7 @@ def handle_file(file_info, event):
         file_url = file_info.get('url_private_download')  # Use the direct download URL
         # Download the file content
         file_content = download_file(file_url)
-        # Process the file content for your prompt
+        # Process the file content for prompt
         process_file_content(file_content, event)
     except SlackApiError as e:
         logging.error(f"Error getting file info: {e}")
@@ -116,8 +116,8 @@ def extract_text_from_pdf(file_content):
 def query_orquesta(event, prompt_user):
     # Invoke the Orquesta deployment
     deployment = client.deployments.invoke(
-        key="pierre-slack-app",
-        inputs={"prompt": prompt_user}
+        key="slack-app",
+        inputs={"prompt": prompt_user, "doc": text_content}
     )
 
     # Reply to the thread with the result from Orquesta
