@@ -5,6 +5,11 @@ from orquesta_sdk import Orquesta, OrquestaClientOptions
 import shlex
 from slack_sdk import WebClient
 from dotenv import load_dotenv
+import requests
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
 # Load environment variables
 load_dotenv()
@@ -24,6 +29,7 @@ client = Orquesta(options)
 @app.route('/slack/events', methods=['POST'])
 def slack_events():
     data = request.json
+    logging.info(f"Incoming event: {data}") 
 
     # Slack sends a challenge parameter in the initial verification request
     if 'challenge' in data:
@@ -45,7 +51,8 @@ def handle_file_shared(event):
     file_id = event.get('file_id')
     try:
         # Get file info
-        file_info = slack_client.files.info(file=file_id)
+        file_info = slack_client.files_info(file=file_id)
+        logging.info(f"File info: {file_info}")  # Log the file info
         if file_info['ok']:
             file_url = file_info['file']['url_private']
             # Download the file content
@@ -53,22 +60,25 @@ def handle_file_shared(event):
             # Process the file content for your prompt
             process_file_content(file_content, event)
     except SlackApiError as e:
-        print(f"Error getting file info: {e}")
+        logging.error(f"Error getting file info: {e}")
 
 def download_file(file_url):
     headers = {'Authorization': f'Bearer {os.getenv("SLACK_BOT_TOKEN")}'}
     response = requests.get(file_url, headers=headers)
     if response.status_code == 200:
+        logging.info(f"File downloaded successfully: {file_url}")  # Log successful download
         return response.content
     else:
-        print(f"Error downloading file: {response.status_code}")
+        logging.error(f"Error downloading file: {response.status_code}, {response.text}")  # Log download error
         return None
 
 def process_file_content(file_content, event):
-    # Here you would process the file content and use it for your prompt
-    # For example, you could convert the file content to text and pass it to your Orquesta API call
-    # This is just a placeholder function to illustrate the process
-    pass
+    # Log the start of processing
+    logging.info(f"Processing file content for event: {event}")
+    # ... existing processing code ...
+    # Log the end of processing
+    logging.info(f"Finished processing file content for event: {event}")
+
 
 def handle_app_mention(event):
     # Extract the text mentioned to the bot
