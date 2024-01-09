@@ -45,38 +45,34 @@ def slack_events():
     return '', 200  # HTTP 200 with empty body
 
 def handle_app_mention(event):
-    # Extract the text mentioned to the bot
     prompt_user = event.get('text', '').split('>')[1].strip()
-
-    # Check if there are files attached in the mention
     files = event.get('files', [])
-    if files:
-        # Handle each file in the files array
-        for file_info in files:
-            handle_file(file_info, event)
+    text_content = None  # Initialize text_content
 
-    # Send an immediate response to Slack indicating that the request is being processed
+    if files:
+        for file_info in files:
+            text_content = handle_file(file_info, event)  # Capture the returned text_content
+            if text_content:  # If text_content is available, break the loop
+                break
+
     slack_client.chat_postMessage(
         channel=event['channel'],
-        thread_ts=event['ts'],  # Ensure this is the original message timestamp
+        thread_ts=event['ts'],
         text="Processing your request, please wait..."
     )
 
-    # Start a new thread to handle the long-running Orquesta API call
     threading.Thread(target=query_orquesta, args=(event, prompt_user, text_content)).start()
 
 def handle_file(file_info, event):
     file_id = file_info.get('id')
+    text_content = None  # Initialize text_content
     try:
-        # Get file info (if needed, you already have it in file_info)
-        # file_info = slack_client.files_info(file=file_id)
         file_url = file_info.get('url_private_download')  # Use the direct download URL
-        # Download the file content
         file_content = download_file(file_url)
-        # Process the file content for prompt
-        process_file_content(file_content, event)
+        text_content = process_file_content(file_content, event)  # Get text_content from the file
     except SlackApiError as e:
         logging.error(f"Error getting file info: {e}")
+    return text_content  # Return the extracted text content
     
 
 def download_file(file_url):
