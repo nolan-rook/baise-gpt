@@ -96,14 +96,12 @@ def process_file_content(file_content, event):
     text_content = None
     if file_type == 'pdf':
         text_content = extract_text_from_pdf(file_content)
-    elif file_type in ['docx', 'msword']:
-        text_content = extract_text_from_docx(file_content)
 
     if text_content:
         # This is just a placeholder to illustrate the process
         logging.info(f"Extracted text content: {text_content[:100]}")  # Log the first 100 characters
     else:
-        logging.error("Could not extract text from the file.")
+        logging.error("Could not extract text from the file. Make sure that you upload a pdf")
 
 def extract_text_from_pdf(file_content):
     try:
@@ -114,15 +112,6 @@ def extract_text_from_pdf(file_content):
             return text
     except Exception as e:
         logging.error(f"Error extracting text from PDF: {e}")
-        return None
-
-def extract_text_from_docx(file_content):
-    try:
-        doc = docx.Document(io.BytesIO(file_content))
-        text =n".join(paragraph.text for paragraph in doc.paragraphs)
-        return text
-    except Exception as e:
-        logging.error(f"Error extracting text from DOCX: {e}")
         return None
 
 def query_orquesta(event, prompt_user):
