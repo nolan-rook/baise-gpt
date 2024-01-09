@@ -63,7 +63,7 @@ def handle_app_mention(event):
     )
 
     # Start a new thread to handle the long-running Orquesta API call
-    threading.Thread(target=query_orquesta, args=(event, prompt_user)).start()
+    threading.Thread(target=query_orquesta, args=(event, prompt_user, text_content)).start()
 
 def handle_file(file_info, event):
     file_id = file_info.get('id')
@@ -77,6 +77,7 @@ def handle_file(file_info, event):
         process_file_content(file_content, event)
     except SlackApiError as e:
         logging.error(f"Error getting file info: {e}")
+    
 
 def download_file(file_url):
     headers = {'Authorization': f'Bearer {os.getenv("SLACK_BOT_TOKEN")}'}
@@ -101,6 +102,7 @@ def process_file_content(file_content, event):
         logging.info(f"Extracted text content: {text_content[:100]}")  # Log the first 100 characters
     else:
         logging.error("Could not extract text from the file. Make sure that you upload a pdf")
+    return text_content
 
 def extract_text_from_pdf(file_content):
     try:
@@ -113,7 +115,7 @@ def extract_text_from_pdf(file_content):
         logging.error(f"Error extracting text from PDF: {e}")
         return None
 
-def query_orquesta(event, prompt_user):
+def query_orquesta(event, prompt_user, text_content):
     # Invoke the Orquesta deployment
     deployment = client.deployments.invoke(
         key="slack-app",
