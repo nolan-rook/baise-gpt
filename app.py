@@ -41,24 +41,39 @@ def slack_events():
     if event.get('type') == 'app_mention':
         handle_app_mention(event)
     
-    # Handle file_shared events
-    if event.get('type') == 'file_shared':
-        handle_file_shared(event)
-
     return '', 200  # HTTP 200 with empty body
 
-def handle_file_shared(event):
-    file_id = event.get('file_id')
+def handle_app_mention(event):
+    # Extract the text mentioned to the bot
+    prompt_user = event.get('text', '').split('>')[1].strip()
+
+    # Check if there are files attached in the mention
+    files = event.get('files', [])
+    if files:
+        # Handle each file in the files array
+        for file_info in files:
+            handle_file(file_info, event)
+
+    # Send an immediate response to Slack indicating that the request is being processed
+    slack_client.chat_postMessage(
+        channel=event['channel'],
+        thread_ts=event['ts'],  # Ensure this is the original message timestamp
+        text="Processing your request, please wait..."
+    )
+
+    # Start a new thread to handle the long-running Orquesta API call
+    threading.Thread(target=query_orquesta, args=(event, prompt_user)).start()
+
+def handle_file(file_info, event):
+    file_id = file_info.get('id')
     try:
-        # Get file info
-        file_info = slack_client.files_info(file=file_id)
-        logging.info(f"File info: {file_info}")  # Log the file info
-        if file_info['ok']:
-            file_url = file_info['file']['url_private']
-            # Download the file content
-            file_content = download_file(file_url)
-            # Process the file content for your prompt
-            process_file_content(file_content, event)
+        # Get file info (if needed, you already have it in file_info)
+        # file_info = slack_client.files_info(file=file_id)
+        file_url = file_info.get('url_private_download')  # Use the direct download URL
+        # Download the file content
+        file_content = download_file(file_url)
+        # Process the file content for your prompt
+        process_file_content(file_content, event)
     except SlackApiError as e:
         logging.error(f"Error getting file info: {e}")
 
@@ -78,21 +93,6 @@ def process_file_content(file_content, event):
     # ... existing processing code ...
     # Log the end of processing
     logging.info(f"Finished processing file content for event: {event}")
-
-
-def handle_app_mention(event):
-    # Extract the text mentioned to the bot
-    prompt_user = event.get('text', '').split('>')[1].strip()
-
-    # Send an immediate response to Slack indicating that the request is being processed
-    slack_client.chat_postMessage(
-        channel=event['channel'],
-        thread_ts=event['ts'],  # Ensure this is the original message timestamp
-        text="Processing your request, please wait..."
-    )
-
-    # Start a new thread to handle the long-running Orquesta API call
-    threading.Thread(target=query_orquesta, args=(event, prompt_user)).start()
 
 def query_orquesta(event, prompt_user):
     # Invoke the Orquesta deployment
