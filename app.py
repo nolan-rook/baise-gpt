@@ -34,8 +34,41 @@ def slack_events():
     # Handle app_mention events
     if event.get('type') == 'app_mention':
         handle_app_mention(event)
+    
+    # Handle file_shared events
+    if event.get('type') == 'file_shared':
+        handle_file_shared(event)
 
     return '', 200  # HTTP 200 with empty body
+
+def handle_file_shared(event):
+    file_id = event.get('file_id')
+    try:
+        # Get file info
+        file_info = slack_client.files.info(file=file_id)
+        if file_info['ok']:
+            file_url = file_info['file']['url_private']
+            # Download the file content
+            file_content = download_file(file_url)
+            # Process the file content for your prompt
+            process_file_content(file_content, event)
+    except SlackApiError as e:
+        print(f"Error getting file info: {e}")
+
+def download_file(file_url):
+    headers = {'Authorization': f'Bearer {os.getenv("SLACK_BOT_TOKEN")}'}
+    response = requests.get(file_url, headers=headers)
+    if response.status_code == 200:
+        return response.content
+    else:
+        print(f"Error downloading file: {response.status_code}")
+        return None
+
+def process_file_content(file_content, event):
+    # Here you would process the file content and use it for your prompt
+    # For example, you could convert the file content to text and pass it to your Orquesta API call
+    # This is just a placeholder function to illustrate the process
+    pass
 
 def handle_app_mention(event):
     # Extract the text mentioned to the bot
