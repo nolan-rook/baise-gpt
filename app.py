@@ -27,6 +27,8 @@ api_key = os.getenv("ORQUESTA_API_KEY")
 options = OrquestaClientOptions(api_key=api_key, environment="production")
 client = Orquesta(options)
 
+bot_user_id = slack_client.auth_test()['user_id']
+
 # Route for handling Slack events
 @app.route('/slack/events', methods=['POST'])
 def slack_events():
@@ -37,22 +39,26 @@ def slack_events():
     if 'challenge' in data:
         return jsonify({'challenge': data['challenge']})
 
-    event = data.get('event', {}
+    event = data.get('event', {})
 
     # Handle app_mention events
     if event.get('type') == 'app_mention':
         handle_app_mention(event)
-    # Handle message.app_home events and direct messages
-    elif event.get('type') == 'message' and (event.get('channel_type') == 'app_home' or event.get('channel_type') == 'im'):
+    # Handle app direct messages 
+    elif event.get('type') == 'message' and event.get('channel_type') == 'im':
         handle_app_mention(event)
 
     return '', 200  # HTTP 200 with empty body
 
 def handle_app_mention(event):
     logging.info(f"Handling event: {event}")  # Log the event being handled
+    # Ignore events where the user is the bot itself
+    if event.get('user') == bot_user_id:
+        return
+    
     if event.get('type') == 'app_mention':
         prompt_user = event.get('text', '').split('>')[1].strip()
-    elif event.get('type') == 'message' and event.get('channel_type') == 'app_home':
+    elif event.get('type') == 'message' and event.get('channel_type') == 'im':
         prompt_user = event.get('text', '').strip()
 
     files = event.get('files', [])
@@ -148,20 +154,12 @@ def query_orquesta(event, prompt_user, text_content):
             }
         )
 
-    # Reply to the thread with the result from Orquesta
-    if event.get('type') == 'app_mention':
-        logging.info(f"Posting message to thread: {deployment.choices[0].message.content}")  # Log the message being posted
-        slack_client.chat_postMessage(
-            channel=event['channel'],
-            thread_ts=event['ts'],  # Ensure this is the original message timestamp
-            text=deployment.choices[0].message.content
-        )
-    elif event.get('type') == 'message' and event.get('channel_type') == 'app_home':
-        logging.info(f"Posting message to channel: {deployment.choices[0].message.content}")  # Log the message being posted
-        slack_client.chat_postMessage(
-            channel=event['channel'],
-            text=deployment.choices[0].message.content
-        )
+    logging.info(f"Posting message to thread: {deployment.choices[0].message.content}")  # Log the message being posted
+    slack_client.chat_postMessage(
+        channel=event['channel'],
+        thread_ts=event['ts'],  # Ensure this is the original message timestamp
+        text=deployment.choices[0].message.content
+    )
     
 # Updated Route for handling Slash Commands
 @app.route('/slack/commands', methods=['POST'])
