@@ -48,7 +48,11 @@ def slack_events():
     return '', 200  # HTTP 200 with empty body
 
 def handle_app_mention(event):
-    prompt_user = event.get('text', '').split('>')[1].strip()
+    if event.get('type') == 'app_mention':
+        prompt_user = event.get('text', '').split('>')[1].strip()
+    elif event.get('type') == 'message' and event.get('channel_type') == 'app_home':
+        prompt_user = event.get('text', '').strip()
+
     files = event.get('files', [])
     text_content = None  # Initialize text_content
 
@@ -115,11 +119,30 @@ def extract_text_from_pdf(file_content):
         return None
 
 def query_orquesta(event, prompt_user, text_content):
-    # Invoke the Orquesta deployment
-    deployment = client.deployments.invoke(
-        key="slack-app",
-        inputs={"prompt": prompt_user, "doc": text_content}
-    )
+    # Check if text_content is empty
+    if not text_content:
+        # Invoke the Orquesta deployment
+        deployment = client.deployments.invoke(
+            key="slack-app",
+            context={
+                "doc": False
+            },
+            metadata={"custom-field-name":"custom-metadata-value"}
+        )
+    else:
+        # Invoke the Orquesta deployment
+        deployment = client.deployments.invoke(
+            key="slack-app",
+            context={
+                "environments": [],
+                "doc": None
+            },
+            inputs={
+                "doc": "",
+                "prompt": prompt_user
+            },
+            metadata={"custom-field-name":"custom-metadata-value"}
+        )
 
     # Reply to the thread with the result from Orquesta
     slack_client.chat_postMessage(
@@ -127,7 +150,7 @@ def query_orquesta(event, prompt_user, text_content):
         thread_ts=event['ts'],  # Ensure this is the original message timestamp
         text=deployment.choices[0].message.content
     )
-
+    
 # Updated Route for handling Slash Commands
 @app.route('/slack/commands', methods=['POST'])
 def slack_commands():
