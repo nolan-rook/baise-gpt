@@ -41,9 +41,6 @@ def slack_events():
     # Handle app_mention events
     if event.get('type') == 'app_mention':
         handle_app_mention(event)
-    # Handle message.im events
-    elif event.get('type') == 'message' and event.get('channel_type') == 'im':
-        handle_app_mention(event)
     # Handle message.app_home events
     elif event.get('type') == 'message' and event.get('channel_type') == 'app_home':
         handle_app_mention(event)
