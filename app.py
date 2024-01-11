@@ -37,7 +37,7 @@ def slack_events():
     if 'challenge' in data:
         return jsonify({'challenge': data['challenge']})
 
-    event = data.get('event', {})
+    event = data.get('event', {}
 
     # Handle app_mention events
     if event.get('type') == 'app_mention':
