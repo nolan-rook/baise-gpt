@@ -127,7 +127,9 @@ def query_orquesta(event, prompt_user, text_content):
             context={
                 "doc": False
             },
-            metadata={"custom-field-name":"custom-metadata-value"}
+            inputs={
+                "prompt": prompt_user
+            }
         )
     else:
         # Invoke the Orquesta deployment
@@ -140,16 +142,21 @@ def query_orquesta(event, prompt_user, text_content):
             inputs={
                 "doc": text_content,
                 "prompt": prompt_user
-            },
-            metadata={"custom-field-name":"custom-metadata-value"}
+            }
         )
 
     # Reply to the thread with the result from Orquesta
-    slack_client.chat_postMessage(
-        channel=event['channel'],
-        thread_ts=event['ts'],  # Ensure this is the original message timestamp
-        text=deployment.choices[0].message.content
-    )
+    if event.get('type') == 'app_mention':
+        slack_client.chat_postMessage(
+            channel=event['channel'],
+            thread_ts=event['ts'],  # Ensure this is the original message timestamp
+            text=deployment.choices[0].message.content
+        )
+    elif event.get('type') == 'message' and event.get('channel_type') == 'app_home':
+        slack_client.chat_postMessage(
+            channel=event['channel'],
+            text=deployment.choices[0].message.content
+        )
     
 # Updated Route for handling Slash Commands
 @app.route('/slack/commands', methods=['POST'])
