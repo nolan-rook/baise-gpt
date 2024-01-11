@@ -31,6 +31,7 @@ client = Orquesta(options)
 @app.route('/slack/events', methods=['POST'])
 def slack_events():
     data = request.json
+    logging.info(f"Received event: {data}")  # Log the received event
 
     # Slack sends a challenge parameter in the initial verification request
     if 'challenge' in data:
@@ -48,6 +49,7 @@ def slack_events():
     return '', 200  # HTTP 200 with empty body
 
 def handle_app_mention(event):
+    logging.info(f"Handling event: {event}")  # Log the event being handled
     if event.get('type') == 'app_mention':
         prompt_user = event.get('text', '').split('>')[1].strip()
     elif event.get('type') == 'message' and event.get('channel_type') == 'app_home':
@@ -119,6 +121,7 @@ def extract_text_from_pdf(file_content):
         return None
 
 def query_orquesta(event, prompt_user, text_content):
+    logging.info(f"Invoking Orquesta with event: {event}, prompt_user: {prompt_user}, text_content: {text_content}")  # Log the Orquesta invocation
     # Check if text_content is empty
     if not text_content:
         # Invoke the Orquesta deployment
@@ -147,12 +150,14 @@ def query_orquesta(event, prompt_user, text_content):
 
     # Reply to the thread with the result from Orquesta
     if event.get('type') == 'app_mention':
+        logging.info(f"Posting message to thread: {deployment.choices[0].message.content}")  # Log the message being posted
         slack_client.chat_postMessage(
             channel=event['channel'],
             thread_ts=event['ts'],  # Ensure this is the original message timestamp
             text=deployment.choices[0].message.content
         )
     elif event.get('type') == 'message' and event.get('channel_type') == 'app_home':
+        logging.info(f"Posting message to channel: {deployment.choices[0].message.content}")  # Log the message being posted
         slack_client.chat_postMessage(
             channel=event['channel'],
             text=deployment.choices[0].message.content
