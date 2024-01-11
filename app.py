@@ -138,7 +138,7 @@ def query_orquesta(event, prompt_user, text_content):
                 "doc": None
             },
             inputs={
-                "doc": "",
+                "doc": text_content,
                 "prompt": prompt_user
             },
             metadata={"custom-field-name":"custom-metadata-value"}
