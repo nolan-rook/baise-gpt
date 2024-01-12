@@ -214,7 +214,7 @@ def execute_orquesta_command(orquesta_key, command_text, response_url, user_id, 
         return
 
     # Map the command to the corresponding Orquesta inputs
-    if orquesta_key in ["content-BEMelanoma-Innovator-creator", "content-BEMelanoma-Science-driven-creator", "content-BEMelanoma-Patient-oriented-creator", "content-BEMelanoma-All-creator"]:
+    if orquesta_key in ["content-BEMelanoma-Innovator-creator", "content-BEMelanoma-Science-driven-creator", "content-BEMelanoma-Patient-oriented-creator"]:
         content = command_text
         inputs = {"content": content}
     elif orquesta_key == "blog-post-creator":
@@ -296,6 +296,44 @@ def execute_orquesta_command(orquesta_key, command_text, response_url, user_id, 
                 text="There was an error processing your prompt request."
             )
         return  # End the function after handling the image creation
+    elif orquesta_key == "content-BEMelanoma-All":
+        content = command_text
+        inputs = {"content": content}
+
+        # Define the keys for the three different personas
+        persona_keys = ["content-BEMelanoma-Innovator-creator", "content-BEMelanoma-Science-driven-creator", "content-BEMelanoma-Patient-oriented-creator"]
+
+        # Initialize an empty list to store the results
+        results = []
+
+        # Loop over the persona_keys and invoke the corresponding Orquesta deployments
+        for key in persona_keys:
+            try:
+                # Invoke the Orquesta deployment
+                deployment = client.deployments.invoke(
+                    key=key,
+                    inputs=inputs
+                )
+
+                # Append the result to the results list
+                results.append(deployment.choices[0].message.content)
+            except Exception as e:
+                # Log the exception for debugging
+                print(f"An error occurred while invoking the Orquesta deployment: {e}")
+
+                # Append an error message to the results list
+                results.append("An error occurred while processing your request for persona: " + key)
+
+        # Join the results into a single string with line breaks between each result
+        result_text = "\n".join(results)
+
+        # Send the result back to Slack
+        slack_client.chat_postMessage(
+            channel=channel_id,
+            thread_ts=ts,  # Use the timestamp from the Slash Command request
+            text=result_text
+        )
+        return
     try:
         # Log the request body for debugging
         print(f"Invoking Orquesta deployment with key: {orquesta_key} and inputs: {inputs}")
