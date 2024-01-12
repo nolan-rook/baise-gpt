@@ -175,11 +175,15 @@ def slack_commands():
 
     # Map the command to the corresponding Orquesta prompt key
     command_to_key_map = {
-        "/blog": "blog-post-creator",
-        "/linkedin-post": "linkedin-post-creator",
-        "/content-to-persona": "content-to-persona-creator",
-        "/mail": "mail-creator",
-        "/image": "image-creator-prompt"
+    "/blog": "blog-post-creator",
+    "/linkedin-post": "linkedin-post-creator",
+    "/content-to-persona": "content-to-persona-creator",
+    "/mail": "mail-creator",
+    "/image": "image-creator-prompt",
+    "/content-BEMelanoma-Innovator": "content-BEMelanoma-Innovator-creator",
+    "/content-BEMelanoma-Science": "content-BEMelanoma-Science-creator",
+    "/content-BEMelanoma-Patient": "content-BEMelanoma-Patient-creator",
+    "/content-BEMelanoma-All": "content-BEMelanoma-All-creator"
     }
 
     # Check if the command is recognized and get the Orquesta prompt key
@@ -210,7 +214,10 @@ def execute_orquesta_command(orquesta_key, command_text, response_url, user_id, 
         return
 
     # Map the command to the corresponding Orquesta inputs
-    if orquesta_key == "blog-post-creator":
+    if orquesta_key in ["content-BEMelanoma-Innovator-creator", "content-BEMelanoma-Science-driven-creator", "content-BEMelanoma-Patient-oriented-creator", "content-BEMelanoma-All-creator"]:
+        content = command_text
+        inputs = {"content": content}
+    elif orquesta_key == "blog-post-creator":
         try:
             keywords, content = args
             inputs = {"content": content, "keywords": keywords}
