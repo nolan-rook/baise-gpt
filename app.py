@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 import requests
 import logging
 import io
-import fitz
+from PyPDF2 import PdfReader
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -33,6 +33,7 @@ bot_user_id = slack_client.auth_test()['user_id']
 @app.route('/slack/events', methods=['POST'])
 def slack_events():
     data = request.json
+    logging.info(f"Received event: {data}")  # Log the received event
 
     # Slack sends a challenge parameter in the initial verification request
     if 'challenge' in data:
@@ -50,6 +51,7 @@ def slack_events():
     return '', 200  # HTTP 200 with empty body
 
 def handle_app_mention(event):
+    logging.info(f"Handling event: {event}")  # Log the event being handled
     # Ignore events where the user is the bot itself
     if event.get('user') == bot_user_id:
         return
@@ -105,15 +107,20 @@ def process_file_content(file_content, event):
     if file_type == 'pdf':
         text_content = extract_text_from_pdf(file_content)
 
+    if text_content:
+        # This is just a placeholder to illustrate the process
+        logging.info(f"Extracted text content: {text_content[:100]}")  # Log the first 100 characters
+    else:
+        logging.error("Could not extract text from the file. Make sure that you upload a pdf")
     return text_content
 
 def extract_text_from_pdf(file_content):
     try:
-        with fitz.open(stream=file_content, filetype="pdf") as pdf:
-            text = ""
-            for page in pdf:
-                text += page.get_text()
-            return text
+        reader = PdfReader('temp_file.pdf')
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text()
+        return text
     except Exception as e:
         logging.error(f"Error extracting text from PDF: {e}")
         return None
@@ -124,7 +131,7 @@ def query_orquesta(event, prompt_user, text_content):
     if not text_content:
         # Invoke the Orquesta deployment
         deployment = client.deployments.invoke(
-            key="slack-app",
+            key="pierre-slack-app",
             context={
                 "doc": False
             },
@@ -135,7 +142,7 @@ def query_orquesta(event, prompt_user, text_content):
     else:
         # Invoke the Orquesta deployment
         deployment = client.deployments.invoke(
-            key="slack-app",
+            key="pierre-slack-app",
             context={
                 "environments": [],
                 "doc": None
@@ -145,6 +152,8 @@ def query_orquesta(event, prompt_user, text_content):
                 "prompt": prompt_user
             }
         )
+
+    logging.info(f"Posting message to thread: {deployment.choices[0].message.content}")  # Log the message being posted
     slack_client.chat_postMessage(
         channel=event['channel'],
         thread_ts=event['ts'],  # Ensure this is the original message timestamp
@@ -158,6 +167,7 @@ def slack_commands():
 
     # Extract the command text and other relevant information
     command_text = data.get('text')
+    logging.info(f"Command text: {command_text}")
     command = data.get('command')
     response_url = data.get('response_url')
     user_id = data.get('user_id')
@@ -302,6 +312,9 @@ def execute_orquesta_command(orquesta_key, command_text, response_url, user_id, 
             )
         return  # End the function after handling the image creation
     try:
+        # Log the request body for debugging
+        print(f"Invoking Orquesta deployment with key: {orquesta_key} and inputs: {inputs}")
+
         # Invoke the Orquesta deployment
         deployment = client.deployments.invoke(
             key=orquesta_key,
@@ -315,6 +328,9 @@ def execute_orquesta_command(orquesta_key, command_text, response_url, user_id, 
             text=deployment.choices[0].message.content
         )
     except Exception as e:
+        # Log the exception for debugging
+        print(f"An error occurred while invoking the Orquesta deployment: {e}")
+
         # Send an error message back to Slack
         slack_client.chat_postMessage(
             channel=channel_id,
