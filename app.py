@@ -89,7 +89,6 @@ def handle_file(file_info, event):
         logging.error(f"Error getting file info: {e}")
     return text_content  # Return the extracted text content
     
-
 def download_file(file_url):
     headers = {'Authorization': f'Bearer {os.getenv("SLACK_BOT_TOKEN")}'}
     response = requests.get(file_url, headers=headers)
@@ -174,6 +173,16 @@ def slack_commands():
     user_id = data.get('user_id')
     channel_id = data.get('channel_id')
 
+    # Special handling for the /content-BEMelanoma-All command
+    if command == "/content-BEMelanoma-All":
+        # Acknowledge the command and start processing
+        immediate_response = "Processing your request for command: '{}', with: '{}'".format(command, command_text)
+        slack_client.chat_postMessage(channel=channel_id, text=immediate_response)
+        
+        # Call a separate function to handle this command
+        threading.Thread(target=handle_content_BEMelanoma_All, args=(command_text, channel_id, data.get('ts'))).start()
+        return '', 200
+
     # Map the command to the corresponding Orquesta prompt key
     command_to_key_map = {
     "/blog": "blog-post-creator",
@@ -183,8 +192,7 @@ def slack_commands():
     "/image": "image-creator-prompt",
     "/content-BEMelanoma-Innovator": "content-BEMelanoma-Innovator-creator",
     "/content-BEMelanoma-Science": "content-BEMelanoma-Science-creator",
-    "/content-BEMelanoma-Patient": "content-BEMelanoma-Patient-creator",
-    "/content-BEMelanoma-All": "content-BEMelanoma-All-creator"
+    "/content-BEMelanoma-Patient": "content-BEMelanoma-Patient-creator"
     }
 
     # Check if the command is recognized and get the Orquesta prompt key
@@ -303,51 +311,6 @@ def execute_orquesta_command(orquesta_key, command_text, response_url, user_id, 
                 text="There was an error processing your prompt request."
             )
         return  # End the function after handling the image creation
-    # Special handling for the /content-BEMelanoma-All command
-    elif command_text.startswith("/content-BEMelanoma-All"):
-        content = command_text
-        inputs = {"content": content}
-
-        # Define the keys for the three different personas
-        persona_keys = {
-            "content-BEMelanoma-Innovator": "content-BEMelanoma-Innovator-creator",
-            "content-BEMelanoma-Science": "content-BEMelanoma-Science-creator",
-            "content-BEMelanoma-Patient": "content-BEMelanoma-Patient-creator"
-        }
-
-        # Initialize an empty list to store the results
-        results = []
-
-        # Loop over the persona_keys and invoke the corresponding Orquesta deployments
-        for persona, key in persona_keys.items():
-            try:
-                # Invoke the Orquesta deployment
-                deployment = client.deployments.invoke(
-                    key=key,
-                    inputs=inputs
-                )
-
-                # Append the result to the results list
-                result_text = f"Persona {persona}n{deployment.choices[0].message.content}"
-                results.append(result_text)
-            except Exception as e:
-                # Log the exception for debugging
-                logging.error(f"An error occurred while invoking the Orquesta deployment for {persona}: {e}")
-
-                # Append an error message to the results list
-                results.append(f"An error occurred while processing your request for persona: {persona}")
-
-        # Join the results into a single string with line breaks between each result
-        combined_results = "\n".join(results)
-
-        # Send the combined result back to Slack
-        slack_client.chat_postMessage(
-            channel=channel_id,
-            thread_ts=ts,  # Use the timestamp from the Slash Command request
-            text=combined_results
-        )
-        return
-    
     try:
         # Log the request body for debugging
         print(f"Invoking Orquesta deployment with key: {orquesta_key} and inputs: {inputs}")
@@ -375,5 +338,48 @@ def execute_orquesta_command(orquesta_key, command_text, response_url, user_id, 
             text="An error occurred while processing your request."
         )
 
+def handle_content_BEMelanoma_All(command_text, channel_id, ts):
+    content = command_text
+    inputs = {"content": content}
+
+    # Define the keys for the three different personas
+    persona_keys = {
+        "content-BEMelanoma-Innovator": "content-BEMelanoma-Innovator-creator",
+        "content-BEMelanoma-Science": "content-BEMelanoma-Science-creator",
+        "content-BEMelanoma-Patient": "content-BEMelanoma-Patient-creator"
+    }
+
+    # Initialize an empty list to store the results
+    results = []
+
+    # Loop over the persona_keys and invoke the corresponding Orquesta deployments
+    for persona, key in persona_keys.items():
+        try:
+            # Invoke the Orquesta deployment
+            deployment = client.deployments.invoke(
+                key=key,
+                inputs=inputs
+            )
+
+            # Append the result to the results list
+            result_text = f"Persona {persona}n{deployment.choices[0].message.content}"
+            results.append(result_text)
+        except Exception as e:
+            # Log the exception for debugging
+            logging.error(f"An error occurred while invoking the Orquesta deployment for {persona}: {e}")
+
+            # Append an error message to the results list
+            results.append(f"An error occurred while processing your request for persona: {persona}")
+
+    # Join the results into a single string with line breaks between each result
+    combined_results ="\n".join(results)
+
+    # Send the combined result back to Slack
+    slack_client.chat_postMessage(
+        channel=channel_id,
+        thread_ts=ts,  # Use the timestamp from the Slash Command request
+        text=combined_results
+    )
+    
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
