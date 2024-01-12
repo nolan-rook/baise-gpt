@@ -168,6 +168,7 @@ def slack_commands():
 
     # Extract the command text and other relevant information
     command_text = data.get('text')
+    logging.info(f"Command text: {command_text}")
     command = data.get('command')
     response_url = data.get('response_url')
     user_id = data.get('user_id')
@@ -214,7 +215,13 @@ def execute_orquesta_command(orquesta_key, command_text, response_url, user_id, 
         return
 
     # Map the command to the corresponding Orquesta inputs
-    if orquesta_key in ["content-BEMelanoma-Innovator-creator", "content-BEMelanoma-Science-driven-creator", "content-BEMelanoma-Patient-oriented-creator"]:
+    if orquesta_key == "content-BEMelanoma-Innovator-creator":
+        content = command_text
+        inputs = {"content": content}
+    elif orquesta_key == "content-BEMelanoma-Science-driven-creator":
+        content = command_text
+        inputs = {"content": content}
+    elif orquesta_key == "content-BEMelanoma-Patient-oriented-creator":
         content = command_text
         inputs = {"content": content}
     elif orquesta_key == "blog-post-creator":
