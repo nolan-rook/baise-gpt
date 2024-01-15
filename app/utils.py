@@ -1,5 +1,5 @@
 from app import slack_client as slack_client_module
-from app.orquesta_client import client
+from app import orquesta_client as orquesta_client_module
 import threading
 import shlex
 import logging
@@ -121,7 +121,7 @@ def post_error_message(channel_id, ts, message):
     if slack_client is None:
         logging.error("Slack client has not been initialized.")
         return
-    slack_client.chat_postMessage(
+    slack_client_module.slack_client.chat_postMessage(
         channel=channel_id,
         thread_ts=ts,
         text=message
@@ -132,7 +132,7 @@ def query_orquesta(event, prompt_user, text_content):
     # Check if text_content is empty
     if not text_content:
         # Invoke the Orquesta deployment
-        deployment = client.deployments.invoke(
+        deployment = orquesta_client_module.client.deployments.invoke(
             key="slack-app",
             context={
                 "doc": False
@@ -143,7 +143,7 @@ def query_orquesta(event, prompt_user, text_content):
         )
     else:
         # Invoke the Orquesta deployment
-        deployment = client.deployments.invoke(
+        deployment = orquesta_client_module.client.deployments.invoke(
             key="slack-app",
             context={
                 "environments": [],
@@ -156,7 +156,7 @@ def query_orquesta(event, prompt_user, text_content):
         )
 
     logging.info(f"Posting message to thread: {deployment.choices[0].message.content}")  # Log the message being posted
-    slack_client.chat_postMessage(
+    slack_client_module.slack_client.chat_postMessage(
         channel=event['channel'],
         thread_ts=event['ts'],  # Ensure this is the original message timestamp
         text=deployment.choices[0].message.content
