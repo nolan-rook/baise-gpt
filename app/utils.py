@@ -3,6 +3,12 @@ from app.orquesta_client import client
 import threading
 import shlex
 import logging
+from docx import Document
+from pptx import Presentation
+from PyPDF2 import PdfReader
+import requests
+from slack_sdk.errors import SlackApiError
+import os
 
 # Initialize bot_user_id as None
 bot_user_id = None
@@ -71,12 +77,15 @@ def process_file_content(file_content, event):
     text_content = None
     if file_type == 'pdf':
         text_content = extract_text_from_pdf(file_content)
+    elif file_type in ['doc', 'docx']:
+        text_content = extract_text_from_docx(file_content)
+    elif file_type in ['ppt', 'pptx']:
+        text_content = extract_text_from_pptx(file_content)
 
     if text_content:
-        # This is just a placeholder to illustrate the process
-        logging.info(f"Extracted text content: {text_content[:100]}")  # Log the first 100 characters
+        logging.info(f"Extracted text content: {text_content[:10]}")  # Log the first 10 characters
     else:
-        logging.error("Could not extract text from the file. Make sure that you upload a pdf")
+        logging.error(f"Could not extract text from the file of type {file_type}.")
     return text_content
 
 def extract_text_from_pdf(file_content):
@@ -88,6 +97,27 @@ def extract_text_from_pdf(file_content):
         return text
     except Exception as e:
         logging.error(f"Error extracting text from PDF: {e}")
+        return None
+
+def extract_text_from_docx(file_content):
+    try:
+        doc = Document(file_content)
+        return "\n".join([paragraph.text for paragraph in doc.paragraphs])
+    except Exception as e:
+        logging.error(f"Error extracting text from DOCX: {e}")
+        return None
+
+def extract_text_from_pptx(file_content):
+    try:
+        ppt = Presentation(file_content)
+        text = []
+        for slide in ppt.slides:
+            for shape in slide.shapes:
+                if hasattr(shape, "text"):
+                    text.append(shape.text)
+        return "\n".join(text)
+    except Exception as e:
+        logging.error(f"Error extracting text from PPTX: {e}")
         return None
 
 def parse_command_arguments(command_text):
