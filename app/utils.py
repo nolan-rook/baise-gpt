@@ -4,9 +4,11 @@ import threading
 import shlex
 import logging
 
+
 def handle_app_mention(event):
     logging.info(f"Handling event: {event}")  # Log the event being handled
     # Ignore events where the user is the bot itself
+    bot_user_id = slack_client.auth_test()['user_id']
     if event.get('user') == bot_user_id:
         return
     
