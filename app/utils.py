@@ -10,18 +10,7 @@ import requests
 from slack_sdk.errors import SlackApiError
 import os
 
-# Initialize bot_user_id as None
-bot_user_id = None
-
-def get_bot_user_id():
-    global bot_user_id, slack_client
-    if bot_user_id is None:
-        bot_user_id = slack_client.auth_test()['user_id']
-    return bot_user_id
-
 def handle_app_mention(event):
-    # Use the get_bot_user_id function to retrieve the bot_user_id
-    bot_user_id = get_bot_user_id()
     logging.info(f"Handling event: {event}")  # Log the event being handled
     # Ignore events where the user is the bot itself
     if event.get('user') == bot_user_id:
