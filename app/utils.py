@@ -1,4 +1,4 @@
-from app.slack_client import slack_client, bot_user_id
+from app import slack_client as slack_client_module
 from app.orquesta_client import client
 import threading
 import shlex
@@ -13,6 +13,7 @@ import os
 def handle_app_mention(event):
     logging.info(f"Handling event: {event}")  # Log the event being handled
     # Ignore events where the user is the bot itself
+    bot_user_id = slack_client_module.bot_user_id
     if event.get('user') == bot_user_id:
         return
     
@@ -30,7 +31,8 @@ def handle_app_mention(event):
             if text_content:  # If text_content is available, break the loop
                 break
 
-    slack_client.chat_postMessage(
+    # Use slack_client from the slack_client module
+    slack_client_module.slack_client.chat_postMessage(
         channel=event['channel'],
         thread_ts=event['ts'],
         text="Processing your request, please wait..."
