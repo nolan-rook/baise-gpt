@@ -1,4 +1,4 @@
-from app.slack_client import slack_client
+from app.slack_client import slack_client, bot_user_id
 from app.orquesta_client import client
 import threading
 import shlex
@@ -116,6 +116,9 @@ def parse_command_arguments(command_text):
         raise ValueError(f"Error parsing arguments: {e}. Make sure to enclose each argument with double quotes.")
 
 def post_error_message(channel_id, ts, message):
+    if slack_client is None:
+        logging.error("Slack client has not been initialized.")
+        return
     slack_client.chat_postMessage(
         channel=channel_id,
         thread_ts=ts,
