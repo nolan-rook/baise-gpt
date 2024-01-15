@@ -14,7 +14,7 @@ import os
 bot_user_id = None
 
 def get_bot_user_id():
-    global bot_user_id
+    global bot_user_id, slack_client
     if bot_user_id is None:
         bot_user_id = slack_client.auth_test()['user_id']
     return bot_user_id
