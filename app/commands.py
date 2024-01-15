@@ -32,14 +32,14 @@ def handle_all_personas_command(command_text, channel_id, ts):
 
 def handle_individual_command(command, command_text, channel_id, ts):
     command_to_key_map = {
-    "/blog": "blog-post-creator",
-    "/linkedin-post": "linkedin-post-creator",
-    "/content-to-persona": "content-to-persona-creator",
-    "/mail": "mail-creator",
-    "/image": "image-creator-prompt",
-    "/content-BEMelanoma-Innovator": "content-BEMelanoma-Innovator-creator",
-    "/content-BEMelanoma-Science": "content-BEMelanoma-Science-creator",
-    "/content-BEMelanoma-Patient": "content-BEMelanoma-Patient-creator"
+    "/blog": "baise-blog-post-creator",
+    "/linkedin-post": "baise-linkedin-post-creator",
+    "/content-to-persona": "baise-content-to-persona-creator",
+    "/mail": "baise-mail-creator",
+    "/image": "baise-image-creator-prompt",
+    "/content-BEMelanoma-Innovator": "baise-content-BEMelanoma-Innovator-creator",
+    "/content-BEMelanoma-Science": "baise-content-BEMelanoma-Science-creator",
+    "/content-BEMelanoma-Patient": "baise-content-BEMelanoma-Patient-creator"
     }
 
     orquesta_key = command_to_key_map.get(command)
@@ -53,7 +53,7 @@ def handle_individual_command(command, command_text, channel_id, ts):
 def execute_orquesta_command(orquesta_key, command_text, channel_id, ts):
     try:
         inputs = get_orquesta_inputs(orquesta_key, command_text)
-        if orquesta_key == "image-creator-prompt":
+        if orquesta_key == "baise-image-creator-prompt":
             handle_image_creation(inputs, channel_id, ts)
         else:
             invoke_orquesta_and_post_message(orquesta_key, inputs, channel_id, ts)
@@ -88,7 +88,7 @@ def handle_image_creation(inputs, channel_id, ts):
     prompt_deployment = orquesta_client_module.client.deployments.invoke(key="image-creator-prompt", inputs=inputs)
     if prompt_deployment.choices and prompt_deployment.choices[0].message:
         image_deployment = orquesta_client_module.client.deployments.invoke(
-            key="image-creator",
+            key="baise-image-creator",
             inputs={"prompt": prompt_deployment.choices[0].message.content}
         )
         image_url = image_deployment.choices[0].message.url
@@ -127,9 +127,9 @@ def handle_content_BEMelanoma_All(command_text, channel_id, ts):
 
     # Define the keys for the three different personas
     persona_keys = {
-        "content-BEMelanoma-Innovator": "content-BEMelanoma-Innovator-creator",
-        "content-BEMelanoma-Science": "content-BEMelanoma-Science-creator",
-        "content-BEMelanoma-Patient": "content-BEMelanoma-Patient-creator"
+        "content-BEMelanoma-Innovator": "baise-content-BEMelanoma-Innovator-creator",
+        "content-BEMelanoma-Science": "baise-content-BEMelanoma-Science-creator",
+        "content-BEMelanoma-Patient": "baise-content-BEMelanoma-Patient-creator"
     }
 
     # Initialize an empty list to store the results

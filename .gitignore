@@ -1,2 +1,4 @@
 .env
-/pierre
+pierre
+data
+__pycache__
