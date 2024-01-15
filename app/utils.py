@@ -1,5 +1,6 @@
 from app import slack_client as slack_client_module
 from app import orquesta_client as orquesta_client_module
+from io import BytesIO
 import threading
 import shlex
 import logging
@@ -92,7 +93,9 @@ def extract_text_from_pdf(file_content):
 
 def extract_text_from_docx(file_content):
     try:
-        doc = Document(file_content)
+        # Convert bytes content to a file-like object
+        file_stream = BytesIO(file_content)
+        doc = Document(file_stream)
         return "\n".join([paragraph.text for paragraph in doc.paragraphs])
     except Exception as e:
         logging.error(f"Error extracting text from DOCX: {e}")
@@ -100,7 +103,9 @@ def extract_text_from_docx(file_content):
 
 def extract_text_from_pptx(file_content):
     try:
-        ppt = Presentation(file_content)
+        # Convert bytes content to a file-like object
+        file_stream = BytesIO(file_content)
+        ppt = Presentation(file_stream)
         text = []
         for slide in ppt.slides:
             for shape in slide.shapes:
@@ -118,7 +123,7 @@ def parse_command_arguments(command_text):
         raise ValueError(f"Error parsing arguments: {e}. Make sure to enclose each argument with double quotes.")
 
 def post_error_message(channel_id, ts, message):
-    if slack_client is None:
+    if slack_client_module.slack_client is None:
         logging.error("Slack client has not been initialized.")
         return
     slack_client_module.slack_client.chat_postMessage(
